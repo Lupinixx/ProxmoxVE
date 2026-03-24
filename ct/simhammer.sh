@@ -29,6 +29,41 @@ function preflight_install_script() {
   fi
 }
 
+function enable_build_swap() {
+  BUILD_SWAP_FILE="${BUILD_SWAP_FILE:-/opt/simhammer/build.swap}"
+  BUILD_SWAP_MB="${BUILD_SWAP_MB:-4096}"
+  BUILD_SWAP_TRIGGER_MB="${BUILD_SWAP_TRIGGER_MB:-8192}"
+  BUILD_SWAP_ENABLED=0
+
+  local mem_total
+  mem_total=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo)
+  if [[ "$mem_total" -ge "$BUILD_SWAP_TRIGGER_MB" ]]; then
+    return
+  fi
+
+  msg_info "Low RAM detected (${mem_total}MB). Creating temporary ${BUILD_SWAP_MB}MB swap for build."
+  mkdir -p "$(dirname "$BUILD_SWAP_FILE")"
+  if command -v fallocate >/dev/null 2>&1; then
+    $STD fallocate -l "${BUILD_SWAP_MB}M" "$BUILD_SWAP_FILE" || $STD dd if=/dev/zero of="$BUILD_SWAP_FILE" bs=1M count="$BUILD_SWAP_MB"
+  else
+    $STD dd if=/dev/zero of="$BUILD_SWAP_FILE" bs=1M count="$BUILD_SWAP_MB"
+  fi
+  chmod 600 "$BUILD_SWAP_FILE"
+  $STD mkswap "$BUILD_SWAP_FILE"
+  $STD swapon "$BUILD_SWAP_FILE"
+  BUILD_SWAP_ENABLED=1
+  msg_ok "Temporary build swap enabled"
+}
+
+function disable_build_swap() {
+  if [[ "${BUILD_SWAP_ENABLED:-0}" == "1" ]]; then
+    msg_info "Removing temporary build swap"
+    swapoff "$BUILD_SWAP_FILE" || true
+    rm -f "$BUILD_SWAP_FILE" || true
+    msg_ok "Removed temporary build swap"
+  fi
+}
+
 function update_script() {
   header_info
   check_container_storage
@@ -50,6 +85,9 @@ function update_script() {
     exit
   fi
   msg_ok "Update available"
+
+  enable_build_swap
+  trap 'disable_build_swap' EXIT
 
   msg_info "Stopping Services"
   systemctl stop simhammer-backend simhammer-frontend
@@ -83,6 +121,8 @@ function update_script() {
   msg_info "Starting Services"
   systemctl start simhammer-backend simhammer-frontend
   msg_ok "Started Services"
+  disable_build_swap
+  trap - EXIT
   msg_ok "Updated successfully!"
   exit
 }
