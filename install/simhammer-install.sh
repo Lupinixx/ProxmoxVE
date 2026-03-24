@@ -98,9 +98,17 @@ msg_ok "Built SimHammer Backend"
 msg_info "Fetching Game Data from Raidbots"
 mkdir -p /tmp/simhammer-data-full
 cd /tmp/simhammer-data-full
-curl -fsSL -o metadata.json https://www.raidbots.com/static/data/live/metadata.json
-for f in $(jq -r '.files[]' metadata.json); do
-  $STD curl -fsSL -o "${f}" "https://www.raidbots.com/static/data/live/${f}"
+RAIDBOTS_BASE_URL="https://www.raidbots.com/static/data/live"
+REQUIRED_DATA_FILES=(
+  equippable-items-full.json
+  enchantments.json
+  bonuses.json
+  bonus-upgrade-sets.json
+  seasons.json
+  instances.json
+)
+for f in "${REQUIRED_DATA_FILES[@]}"; do
+  $STD curl -fsSL --retry 5 --retry-delay 2 --retry-all-errors -o "${f}" "${RAIDBOTS_BASE_URL}/${f}"
 done
 cp /opt/simhammer/source/backend/core/season-config.json /tmp/simhammer-data-full/season-config.json
 mkdir -p /opt/simhammer/resources/data
