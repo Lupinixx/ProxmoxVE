@@ -18,6 +18,7 @@ SIMC_VERSION="${SIMC_VERSION:-HEAD}"
 
 msg_info "Installing Dependencies"
 $STD apt-get install -y \
+  git \
   build-essential \
   libssl-dev \
   libcurl4-openssl-dev \
