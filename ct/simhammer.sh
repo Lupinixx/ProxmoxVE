@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-source <(curl -fsSL https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/misc/build.func)
+SCRIPT_BASE_URL="${SCRIPT_BASE_URL:-https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main}"
+source <(curl -fsSL "${SCRIPT_BASE_URL}/misc/build.func" | sed "s|https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main|${SCRIPT_BASE_URL}|g")
 # Copyright (c) 2021-2026 community-scripts ORG
 # Author: lupinixx
 # License: MIT | https://github.com/community-scripts/ProxmoxVE/raw/main/LICENSE
@@ -18,6 +19,15 @@ header_info "$APP"
 variables
 color
 catch_errors
+
+function preflight_install_script() {
+  local install_url="${SCRIPT_BASE_URL}/install/${var_install}.sh"
+  if ! curl -fsSL "$install_url" >/dev/null; then
+    msg_error "Install script not found: $install_url"
+    msg_error "Aborting before container build to avoid false success on missing installer."
+    exit
+  fi
+}
 
 function update_script() {
   header_info
@@ -78,6 +88,7 @@ function update_script() {
 }
 
 start
+preflight_install_script
 build_container
 description
 
