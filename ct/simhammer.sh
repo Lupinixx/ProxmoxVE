@@ -9,7 +9,7 @@ source <(curl -fsSL "${SCRIPT_BASE_URL}/misc/build.func" | sed "s|https://raw.gi
 APP="SimHammer"
 var_tags="${var_tags:-gaming;wow}"
 var_cpu="${var_cpu:-4}"
-var_ram="${var_ram:-4096}"
+var_ram="${var_ram:-8192}"
 var_disk="${var_disk:-15}"
 var_os="${var_os:-debian}"
 var_version="${var_version:-13}"
