@@ -100,7 +100,7 @@ function update_script() {
   msg_info "Rebuilding Backend"
   source /root/.cargo/env 2>/dev/null || true
   cd /opt/simhammer/source/backend
-  $STD cargo build --release -p simhammer-server --features web
+  $STD cargo build --release -p simhammer-server
   cp /opt/simhammer/source/backend/target/release/simhammer-server /usr/local/bin/simhammer-server
   rm -rf /opt/simhammer/source/backend/target
   msg_ok "Rebuilt Backend"

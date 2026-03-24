@@ -89,7 +89,7 @@ msg_ok "Built SimulationCraft"
 
 msg_info "Building SimHammer Backend (this takes several minutes)"
 cd /opt/simhammer/source/backend
-$STD cargo build --release -p simhammer-server --features web
+$STD cargo build --release -p simhammer-server
 cp /opt/simhammer/source/backend/target/release/simhammer-server /usr/local/bin/simhammer-server
 chmod +x /usr/local/bin/simhammer-server
 rm -rf /opt/simhammer/source/backend/target
